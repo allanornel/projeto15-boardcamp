@@ -1,7 +1,7 @@
 import db from "./../db.js";
 
 export async function getCategories(req, res) {
-  const { order, desc } = req.query;
+  const { order, desc, offset, limit } = req.query;
   try {
     let categories;
     if (order) {
@@ -13,6 +13,21 @@ export async function getCategories(req, res) {
         categories = await db.query(
           `SELECT * FROM categories ORDER BY ${order}`
         );
+      }
+    } else if (offset || limit) {
+      if (offset && limit) {
+        categories = await db.query(
+          "SELECT * FROM categories LIMIT $1 OFFSET $2",
+          [limit, offset]
+        );
+      } else if (offset) {
+        categories = await db.query("SELECT * FROM categories OFFSET $1", [
+          offset,
+        ]);
+      } else if (limit) {
+        categories = await db.query("SELECT * FROM categories LIMIT $1", [
+          limit,
+        ]);
       }
     } else {
       categories = await db.query("SELECT * FROM categories");

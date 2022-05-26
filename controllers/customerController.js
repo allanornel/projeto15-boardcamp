@@ -1,13 +1,12 @@
 import db from "../db.js";
 
 export async function getCustomers(req, res) {
-  const queryStringCpf = req.query.cpf;
-  const { order, desc } = req.query;
+  const { order, desc, offset, limit, cpf } = req.query;
   try {
     let customers;
-    if (queryStringCpf) {
+    if (cpf) {
       customers = await db.query(
-        `SELECT * FROM customers where (cpf LIKE '${queryStringCpf}%')`
+        `SELECT * FROM customers where (cpf LIKE '${cpf}%')`
       );
     } else if (order) {
       if (desc) {
@@ -16,6 +15,19 @@ export async function getCustomers(req, res) {
         );
       } else {
         customers = await db.query(`SELECT * FROM customers ORDER BY ${order}`);
+      }
+    } else if (offset || limit) {
+      if (offset && limit) {
+        customers = await db.query(
+          "SELECT * FROM customers LIMIT $1 OFFSET $2",
+          [limit, offset]
+        );
+      } else if (offset) {
+        customers = await db.query("SELECT * FROM customers OFFSET $1", [
+          offset,
+        ]);
+      } else if (limit) {
+        customers = await db.query("SELECT * FROM customers LIMIT $1", [limit]);
       }
     } else {
       customers = await db.query("SELECT * FROM customers");

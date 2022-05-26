@@ -1,20 +1,30 @@
 import db from "./../db.js";
 
 export async function getGames(req, res) {
-  const queryStringName = req.query.name;
-  const { order, desc } = req.query;
+  const { order, desc, offset, limit, name } = req.query;
   try {
     let games;
 
-    if (queryStringName) {
+    if (name) {
       games = await db.query(
-        `SELECT * FROM games where (lower(name) LIKE '${queryStringName}%')`
+        `SELECT * FROM games where (lower(name) LIKE '${name}%')`
       );
     } else if (order) {
       if (desc) {
         games = await db.query(`SELECT * FROM games ORDER BY ${order} DESC`);
       } else {
         games = await db.query(`SELECT * FROM games ORDER BY ${order}`);
+      }
+    } else if (offset || limit) {
+      if (offset && limit) {
+        games = await db.query("SELECT * FROM games LIMIT $1 OFFSET $2", [
+          limit,
+          offset,
+        ]);
+      } else if (offset) {
+        games = await db.query("SELECT * FROM games OFFSET $1", [offset]);
+      } else if (limit) {
+        games = await db.query("SELECT * FROM games LIMIT $1", [limit]);
       }
     } else {
       games = await db.query("SELECT * FROM games");

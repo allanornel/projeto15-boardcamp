@@ -2,18 +2,16 @@ import db from "./../db.js";
 import dayjs from "dayjs";
 
 export async function getRentals(req, res) {
-  const queryStringCustomerId = req.query.customerId;
-  const queryStringGameId = req.query.gameId;
-  const { order, desc } = req.query;
+  const { customerId, gameId, order, desc, offset, limit } = req.query;
   try {
     let rentals;
-    if (queryStringCustomerId) {
+    if (customerId) {
       rentals = await db.query(`SELECT * FROM rentals WHERE "customerId"=$1`, [
-        queryStringCustomerId,
+        customerId,
       ]);
-    } else if (queryStringGameId) {
+    } else if (gameId) {
       rentals = await db.query(`SELECT * FROM rentals WHERE "gameId"=$1`, [
-        queryStringGameId,
+        gameId,
       ]);
     } else if (order) {
       if (desc) {
@@ -22,6 +20,17 @@ export async function getRentals(req, res) {
         );
       } else {
         rentals = await db.query(`SELECT * FROM rentals ORDER BY ${order}`);
+      }
+    } else if (offset || limit) {
+      if (offset && limit) {
+        rentals = await db.query("SELECT * FROM rentals LIMIT $1 OFFSET $2", [
+          limit,
+          offset,
+        ]);
+      } else if (offset) {
+        rentals = await db.query("SELECT * FROM rentals OFFSET $1", [offset]);
+      } else if (limit) {
+        rentals = await db.query("SELECT * FROM rentals LIMIT $1", [limit]);
       }
     } else {
       rentals = await db.query(`SELECT * FROM rentals`);
