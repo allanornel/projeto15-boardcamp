@@ -61,7 +61,6 @@ export async function postRentals(req, res) {
     if (findCostumer.rowCount === 0) {
       return res.status(400).send("Consumidor não encontrado.");
     }
-    console.log(findGame.rows);
     const findRentals = await db.query(
       `SELECT * FROM rentals WHERE "gameId"=$1`,
       [gameId]

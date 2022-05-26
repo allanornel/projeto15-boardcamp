@@ -1,7 +1,7 @@
 import joi from "joi";
 
-export async function postCostumerSchema(req, res, next) {
-  const costumerSchema = joi.object({
+export async function postCustomerSchema(req, res, next) {
+  const customerSchema = joi.object({
     name: joi.string().required(),
     phone: joi
       .string()
@@ -17,7 +17,7 @@ export async function postCostumerSchema(req, res, next) {
     birthday: joi.date().required(),
   });
 
-  const { error } = costumerSchema.validate(req.body, { abortEarly: false });
+  const { error } = customerSchema.validate(req.body, { abortEarly: false });
   if (error)
     return res.status(400).send(error.details.map((detail) => detail.message));
 

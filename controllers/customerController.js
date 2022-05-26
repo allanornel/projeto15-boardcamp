@@ -1,6 +1,6 @@
-import db from "./../db.js";
+import db from "../db.js";
 
-export async function getCostumers(req, res) {
+export async function getCustomers(req, res) {
   const queryStringCpf = req.query.cpf;
   try {
     let customers;
@@ -17,14 +17,14 @@ export async function getCostumers(req, res) {
     res.status(500).send("Ocorreu um erro ao obter os consumidores");
   }
 }
-export async function getCostumersId(req, res) {
+export async function getCustomersId(req, res) {
   const { id } = req.params;
   try {
-    const costumer = await db.query("SELECT * FROM customers WHERE id = $1", [
+    const customer = await db.query("SELECT * FROM customers WHERE id = $1", [
       id,
     ]);
-    if (costumer.rowCount > 0) {
-      res.status(200).send(costumer.rows[0]);
+    if (customer.rowCount > 0) {
+      res.status(200).send(customer.rows[0]);
     } else {
       res.sendStatus(404);
     }
@@ -33,7 +33,7 @@ export async function getCostumersId(req, res) {
     res.status(500).send("Ocorreu um erro ao obter o consumidor");
   }
 }
-export async function postCostumers(req, res) {
+export async function postCustomers(req, res) {
   const { name, phone, cpf, birthday } = req.body;
   try {
     const findCpf = await db.query("SELECT * FROM customers WHERE cpf = $1", [
@@ -52,7 +52,7 @@ export async function postCostumers(req, res) {
     res.status(500).send("Ocorreu um erro ao cadastrar o consumidor");
   }
 }
-export async function updateCostumers(req, res) {
+export async function updateCustomers(req, res) {
   const { id } = req.params;
   const { name, phone, cpf, birthday } = req.body;
   try {
@@ -60,7 +60,7 @@ export async function updateCostumers(req, res) {
       cpf,
     ]);
     if (findCpf.rowCount > 0) {
-      if (findCpf.rows[0]?.name !== name) {
+      if (findCpf.rows[0].id !== parseInt(id)) {
         return res.status(409).send("CPF já cadastrado!");
       }
     }
