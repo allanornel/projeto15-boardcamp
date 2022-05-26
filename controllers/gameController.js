@@ -2,15 +2,24 @@ import db from "./../db.js";
 
 export async function getGames(req, res) {
   const queryStringName = req.query.name;
+  const { order, desc } = req.query;
   try {
     let games;
+
     if (queryStringName) {
       games = await db.query(
         `SELECT * FROM games where (lower(name) LIKE '${queryStringName}%')`
       );
+    } else if (order) {
+      if (desc) {
+        games = await db.query(`SELECT * FROM games ORDER BY ${order} DESC`);
+      } else {
+        games = await db.query(`SELECT * FROM games ORDER BY ${order}`);
+      }
     } else {
       games = await db.query("SELECT * FROM games");
     }
+
     const gamesWithCategory = await Promise.all(
       games.rows.map(async (game) => {
         const categoryName = await db.query(

@@ -1,8 +1,6 @@
 import joi from "joi";
 
 export async function postCategorySchema(req, res, next) {
-  const { name } = req.body;
-
   const categorySchema = joi.object({
     name: joi.string().required(),
   });

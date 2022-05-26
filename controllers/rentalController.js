@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 export async function getRentals(req, res) {
   const queryStringCustomerId = req.query.customerId;
   const queryStringGameId = req.query.gameId;
+  const { order, desc } = req.query;
   try {
     let rentals;
     if (queryStringCustomerId) {
@@ -14,6 +15,14 @@ export async function getRentals(req, res) {
       rentals = await db.query(`SELECT * FROM rentals WHERE "gameId"=$1`, [
         queryStringGameId,
       ]);
+    } else if (order) {
+      if (desc) {
+        rentals = await db.query(
+          `SELECT * FROM rentals ORDER BY ${order} DESC`
+        );
+      } else {
+        rentals = await db.query(`SELECT * FROM rentals ORDER BY ${order}`);
+      }
     } else {
       rentals = await db.query(`SELECT * FROM rentals`);
     }

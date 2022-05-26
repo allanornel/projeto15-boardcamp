@@ -1,8 +1,22 @@
 import db from "./../db.js";
 
 export async function getCategories(req, res) {
+  const { order, desc } = req.query;
   try {
-    const categories = await db.query("SELECT * FROM categories");
+    let categories;
+    if (order) {
+      if (desc) {
+        categories = await db.query(
+          `SELECT * FROM categories ORDER BY ${order} DESC`
+        );
+      } else {
+        categories = await db.query(
+          `SELECT * FROM categories ORDER BY ${order}`
+        );
+      }
+    } else {
+      categories = await db.query("SELECT * FROM categories");
+    }
     res.status(200).send(categories.rows);
   } catch (e) {
     console.log(e);

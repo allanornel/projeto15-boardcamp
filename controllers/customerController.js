@@ -2,12 +2,21 @@ import db from "../db.js";
 
 export async function getCustomers(req, res) {
   const queryStringCpf = req.query.cpf;
+  const { order, desc } = req.query;
   try {
     let customers;
     if (queryStringCpf) {
       customers = await db.query(
-        `SELECT * FROM customers where (cpf LIKE '${queryStringName}%')`
+        `SELECT * FROM customers where (cpf LIKE '${queryStringCpf}%')`
       );
+    } else if (order) {
+      if (desc) {
+        customers = await db.query(
+          `SELECT * FROM customers ORDER BY ${order} DESC`
+        );
+      } else {
+        customers = await db.query(`SELECT * FROM customers ORDER BY ${order}`);
+      }
     } else {
       customers = await db.query("SELECT * FROM customers");
     }
