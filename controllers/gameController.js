@@ -1,21 +1,25 @@
 import db from "./../db.js";
 
 export async function getGames(req, res) {
-  // TODO - - Caso seja passado um parâmetro `name` na **query string** da requisição,
-  // os jogos devem ser filtrados para retornar somente os que começam com a string passada (case insensitive).
-  // Exemplo:
-  // Para a rota `/games?name=ba`, deve ser retornado uma array somente com
-  //  os jogos que comecem com "ba", como "Banco Imobiliário", "Batalha Naval", etc
-  //   const queryString = req.query;
+  const queryStringName = req.query.name;
   try {
-    const games = await db.query("SELECT * FROM games");
-    const gamesWithCategory = await games.rows.map(async (game) => {
-      const categoryName = await db.query(
-        "SELECT name FROM categories WHERE id = $1",
-        [game.categoryId]
+    let games;
+    if (queryStringName) {
+      games = await db.query(
+        `SELECT * FROM games where (lower(name) LIKE '${queryStringName}%')`
       );
-      return { ...game, categoryName };
-    });
+    } else {
+      games = await db.query("SELECT * FROM games");
+    }
+    const gamesWithCategory = await Promise.all(
+      games.rows.map(async (game) => {
+        const categoryName = await db.query(
+          "SELECT name FROM categories WHERE id = $1",
+          [game.categoryId]
+        );
+        return { ...game, categoryName: categoryName.rows[0].name };
+      })
+    );
     res.status(200).send(gamesWithCategory);
   } catch (e) {
     console.log(e);
@@ -42,7 +46,7 @@ export async function postGames(req, res) {
     }
 
     await db.query(
-      "INSERT INTO games (name, image, stockTotal, categoryId, pricePerDay) VALUES ($1, $2, $3, $4, $5)",
+      `INSERT INTO games (name, image, "stockTotal", "categoryId", "pricePerDay") VALUES ($1, $2, $3, $4, $5)`,
       [name, image, stockTotal, categoryId, pricePerDay]
     );
     res.sendStatus(201);
