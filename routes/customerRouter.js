@@ -5,7 +5,7 @@ import {
   postCustomers,
   updateCustomers,
 } from "../controllers/customerController.js";
-import { postCustomerSchema } from "../schemas/costumerSchema.js";
+import { postCustomerSchema } from "../schemas/customerSchema.js";
 
 const customerRouter = Router();
 
