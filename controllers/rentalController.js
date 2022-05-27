@@ -6,56 +6,111 @@ export async function getRentals(req, res) {
   try {
     let rentals;
     if (customerId) {
-      rentals = await db.query(`SELECT * FROM rentals WHERE "customerId"=$1`, [
-        customerId,
-      ]);
+      rentals = await db.query(
+        `SELECT 
+      rentals.*, customers.name AS "customerName", games.name AS "gameName", games."categoryId", 
+      categories.name AS "categoryName" 
+      FROM rentals 
+        JOIN customers ON rentals."customerId"=customers.id
+        JOIN games ON rentals."gameId"=games.id
+        JOIN categories ON games."categoryId"=categories.id WHERE "customerId"=$1`,
+        [customerId]
+      );
     } else if (gameId) {
-      rentals = await db.query(`SELECT * FROM rentals WHERE "gameId"=$1`, [
-        gameId,
-      ]);
+      rentals = await db.query(
+        `SELECT 
+      rentals.*, customers.name AS "customerName", games.name AS "gameName", games."categoryId", 
+      categories.name AS "categoryName" 
+      FROM rentals 
+        JOIN customers ON rentals."customerId"=customers.id
+        JOIN games ON rentals."gameId"=games.id
+        JOIN categories ON games."categoryId"=categories.id WHERE "gameId"=$1`,
+        [gameId]
+      );
     } else if (order) {
       if (desc) {
         rentals = await db.query(
-          `SELECT * FROM rentals ORDER BY ${order} DESC`
+          `SELECT 
+          rentals.*, customers.name AS "customerName", games.name AS "gameName", games."categoryId", 
+          categories.name AS "categoryName" 
+          FROM rentals 
+            JOIN customers ON rentals."customerId"=customers.id
+            JOIN games ON rentals."gameId"=games.id
+            JOIN categories ON games."categoryId"=categories.id ORDER BY "${order}" DESC`
         );
       } else {
-        rentals = await db.query(`SELECT * FROM rentals ORDER BY ${order}`);
+        rentals = await db.query(`SELECT 
+        rentals.*, customers.name AS "customerName", games.name AS "gameName", games."categoryId", 
+        categories.name AS "categoryName" 
+        FROM rentals 
+          JOIN customers ON rentals."customerId"=customers.id
+          JOIN games ON rentals."gameId"=games.id
+          JOIN categories ON games."categoryId"=categories.id ORDER BY "${order}"`);
       }
     } else if (offset || limit) {
       if (offset && limit) {
-        rentals = await db.query("SELECT * FROM rentals LIMIT $1 OFFSET $2", [
-          limit,
-          offset,
-        ]);
+        rentals = await db.query(
+          `SELECT 
+        rentals.*, customers.name AS "customerName", games.name AS "gameName", games."categoryId", 
+        categories.name AS "categoryName" 
+        FROM rentals 
+          JOIN customers ON rentals."customerId"=customers.id
+          JOIN games ON rentals."gameId"=games.id
+          JOIN categories ON games."categoryId"=categories.id LIMIT $1 OFFSET $2`,
+          [limit, offset]
+        );
       } else if (offset) {
-        rentals = await db.query("SELECT * FROM rentals OFFSET $1", [offset]);
+        rentals = await db.query(
+          `SELECT 
+        rentals.*, customers.name AS "customerName", games.name AS "gameName", games."categoryId", 
+        categories.name AS "categoryName" 
+        FROM rentals 
+          JOIN customers ON rentals."customerId"=customers.id
+          JOIN games ON rentals."gameId"=games.id
+          JOIN categories ON games."categoryId"=categories.id OFFSET $1`,
+          [offset]
+        );
       } else if (limit) {
-        rentals = await db.query("SELECT * FROM rentals LIMIT $1", [limit]);
+        rentals = await db.query(
+          `SELECT 
+        rentals.*, customers.name AS "customerName", games.name AS "gameName", games."categoryId", 
+        categories.name AS "categoryName" 
+        FROM rentals 
+          JOIN customers ON rentals."customerId"=customers.id
+          JOIN games ON rentals."gameId"=games.id
+          JOIN categories ON games."categoryId"=categories.id LIMIT $1`,
+          [limit]
+        );
       }
     } else {
-      rentals = await db.query(`SELECT * FROM rentals`);
+      rentals = await db.query(`SELECT 
+      rentals.*, customers.name AS "customerName", games.name AS "gameName", games."categoryId", 
+      categories.name AS "categoryName" 
+      FROM rentals 
+        JOIN customers ON rentals."customerId"=customers.id
+        JOIN games ON rentals."gameId"=games.id
+        JOIN categories ON games."categoryId"=categories.id;`);
     }
-    const newRentals = await Promise.all(
-      rentals.rows.map(async (rental) => {
-        const customer = await db.query(
-          `SELECT id, name FROM customers WHERE id=$1`,
-          [rental.customerId]
-        );
-        const game = await db.query(
-          `SELECT id, name, "categoryId" FROM games WHERE id=$1`,
-          [rental.gameId]
-        );
-        const categoryName = await db.query(
-          "SELECT name FROM categories WHERE id=$1",
-          [game.rows[0].categoryId]
-        );
-        return {
-          ...rental,
-          customer: customer.rows[0],
-          game: { ...game.rows[0], categoryName: categoryName.rows[0].name },
-        };
-      })
-    );
+
+    const newRentals = rentals.rows.map((rental) => {
+      return {
+        id: rental.id,
+        customerId: rental.customerId,
+        gameId: rental.gameId,
+        rentDate: rental.rentDate,
+        daysRented: rental.daysRented,
+        returnDate: rental.returnDate,
+        originalPrice: rental.originalPrice,
+        delayFee: rental.delayFee,
+        customer: { id: rental.customerId, name: rental.customerName },
+        game: {
+          id: rental.gameId,
+          name: rental.gameName,
+          categoryId: rental.categoryId,
+          categoryName: rental.categoryName,
+        },
+      };
+    });
     res.status(200).send(newRentals);
   } catch (e) {
     console.log(e);
