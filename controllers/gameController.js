@@ -7,39 +7,41 @@ export async function getGames(req, res) {
 
     if (name) {
       games = await db.query(
-        `SELECT * FROM games where (lower(name) LIKE '${name}%')`
+        `SELECT games.*, categories.name AS "categoryName" FROM games JOIN categories ON games."categoryId"=categories.id WHERE (lower(games.name) LIKE '${name}%')`
       );
     } else if (order) {
       if (desc) {
-        games = await db.query(`SELECT * FROM games ORDER BY ${order} DESC`);
+        games = await db.query(
+          `SELECT games.*, categories.name AS "categoryName" FROM games JOIN categories ON games."categoryId"=categories.id ORDER BY games.${order} DESC`
+        );
       } else {
-        games = await db.query(`SELECT * FROM games ORDER BY ${order}`);
+        games = await db.query(
+          `SELECT games.*, categories.name AS "categoryName" FROM games JOIN categories ON games."categoryId"=categories.id ORDER BY games.${order}`
+        );
       }
     } else if (offset || limit) {
       if (offset && limit) {
-        games = await db.query("SELECT * FROM games LIMIT $1 OFFSET $2", [
-          limit,
-          offset,
-        ]);
+        games = await db.query(
+          `SELECT games.*, categories.name AS "categoryName" FROM games JOIN categories ON games."categoryId"=categories.id LIMIT $1 OFFSET $2`,
+          [limit, offset]
+        );
       } else if (offset) {
-        games = await db.query("SELECT * FROM games OFFSET $1", [offset]);
+        games = await db.query(
+          `SELECT games.*, categories.name AS "categoryName" FROM games JOIN categories ON games."categoryId"=categories.id OFFSET $1`,
+          [offset]
+        );
       } else if (limit) {
-        games = await db.query("SELECT * FROM games LIMIT $1", [limit]);
+        games = await db.query(
+          `SELECT games.*, categories.name AS "categoryName" FROM games JOIN categories ON games."categoryId"=categories.id LIMIT $1`,
+          [limit]
+        );
       }
     } else {
-      games = await db.query("SELECT * FROM games");
+      games = await db.query(
+        `SELECT games.*, categories.name AS "categoryName" FROM games JOIN categories ON games."categoryId"=categories.id`
+      );
     }
-
-    const gamesWithCategory = await Promise.all(
-      games.rows.map(async (game) => {
-        const categoryName = await db.query(
-          "SELECT name FROM categories WHERE id = $1",
-          [game.categoryId]
-        );
-        return { ...game, categoryName: categoryName.rows[0].name };
-      })
-    );
-    res.status(200).send(gamesWithCategory);
+    res.status(200).send(games.rows);
   } catch (e) {
     console.log(e);
     res.status(500).send("Ocorreu um erro ao obter os jogos");
